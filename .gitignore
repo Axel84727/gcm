@@ -1,0 +1,13 @@
+# Go binaries
+/bin/
+*.exe
+*.out
+
+# Go test cache
+*.test
+
+# Go workspace
+go.work
+
+# JetBrains
+.idea/
