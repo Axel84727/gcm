@@ -192,15 +192,6 @@ Push to remote? (y/n): y
 - [Bubble Tea](https://github.com/charmbracelet/bubbletea) - Terminal UI framework
 - [Lip Gloss](https://github.com/charmbracelet/lipgloss) - Style definitions
 
-## Future Enhancements
-
-- Configuration file support (`~/.gcm/config.json`)
-- GitHub CLI integration for automatic PR creation
-- Git hooks support
-- Template support for commit messages
-- Custom commit type persistence
-- Commit history search
-
 ## License
 
 MIT
