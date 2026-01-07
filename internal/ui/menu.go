@@ -6,6 +6,7 @@ import (
 
 	"gcm/internal/model"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Model struct {
@@ -13,6 +14,7 @@ type Model struct {
 	cursor   int
 	selected map[int]bool
 	quitting bool
+	canceled bool
 }
 
 func New(items []model.GitChange) *Model {
@@ -37,18 +39,37 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.cursor < len(m.items)-1 {
 				m.cursor++
 			}
-		case "enter":
+		case " ", "space":
 			// toggle selection
 			if m.selected[m.cursor] {
 				delete(m.selected, m.cursor)
 			} else {
 				m.selected[m.cursor] = true
 			}
-		case "c":
+		case "enter":
+			// Confirm selection
 			m.quitting = true
 			return m, tea.Quit
+		case "a":
+			// Select all
+			for i := range m.items {
+				m.selected[i] = true
+			}
+		case "d":
+			// Deselect all
+			m.selected = make(map[int]bool)
+		case "i":
+			// Invert selection
+			newSelected := make(map[int]bool)
+			for i := range m.items {
+				if !m.selected[i] {
+					newSelected[i] = true
+				}
+			}
+			m.selected = newSelected
 		case "q", "esc", "ctrl+c":
 			m.quitting = true
+			m.canceled = true
 			return m, tea.Quit
 		}
 	}
@@ -57,30 +78,61 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *Model) View() string {
 	if len(m.items) == 0 {
-		return "no changes detected\n"
+		return "No changes detected\n"
 	}
 
 	var b strings.Builder
-	b.WriteString("Use ↑/↓ to move, Enter to toggle, c to confirm, q to quit\n\n")
 
-	for i, it := range m.items {
-		cursor := " "
-		if m.cursor == i {
-			cursor = ">"
-		}
+	b.WriteString(titleStyle.Render("📂 File Selection") + "\n\n")
+	b.WriteString(promptStyle.Render("Navigate with ↑/↓, SPACE to mark, ENTER to continue") + "\n\n")
 
-		checked := " "
-		if m.selected[i] {
-			checked = "x"
-		}
-
-		line := fmt.Sprintf("%s [%s] %s\n", cursor, checked, it.DisplayLabel())
-		b.WriteString(line)
+	// Group by type for display
+	categorized := make(map[string][]int)
+	for i, item := range m.items {
+		typ := item.DisplayType()
+		categorized[typ] = append(categorized[typ], i)
 	}
 
-	if m.quitting {
-		b.WriteString("\nQuitting...\n")
+	// Display order
+	order := []string{"MODIFIED", "ADDED", "DELETED", "RENAMED", "UNTRACKED"}
+
+	for _, typ := range order {
+		indices, ok := categorized[typ]
+		if !ok || len(indices) == 0 {
+			continue
+		}
+
+		typeStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("214"))
+		b.WriteString(typeStyle.Render(fmt.Sprintf("%s:", typ)) + "\n")
+
+		for _, i := range indices {
+			it := m.items[i]
+			cursor := " "
+			if m.cursor == i {
+				cursor = ">"
+			}
+
+			checked := " "
+			if m.selected[i] {
+				checked = "x"
+			}
+
+			line := fmt.Sprintf("%s [%s] %s\n", cursor, checked, it.Path)
+
+			if m.cursor == i {
+				b.WriteString(infoStyle.Render(line))
+			} else {
+				b.WriteString(line)
+			}
+		}
+		b.WriteString("\n")
 	}
+
+	selectedCount := len(m.selected)
+	totalCount := len(m.items)
+	b.WriteString(promptStyle.Render(fmt.Sprintf("Selected: %d/%d\n", selectedCount, totalCount)))
+	b.WriteString(promptStyle.Render("Shortcuts: 'a' (select all), 'd' (deselect all), 'i' (invert), 'q' (cancel)\n"))
+	b.WriteString(promptStyle.Render("Tip: Group related changes in the same commit\n"))
 
 	return b.String()
 }
@@ -93,6 +145,10 @@ func Run(items []model.GitChange) ([]model.GitChange, error) {
 	}
 
 	modelPtr := m.(*Model)
+	if modelPtr.canceled {
+		return nil, nil
+	}
+
 	var res []model.GitChange
 	for i := range modelPtr.items {
 		if modelPtr.selected[i] {
