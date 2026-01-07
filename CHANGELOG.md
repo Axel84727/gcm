@@ -108,27 +108,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## Future Roadmap
-
-### Planned for 0.3.0
-- Configuration file support (`~/.gcm/config.json`)
-- Customizable commit types
-- Default settings (auto-push, branch prefix, etc.)
-
-### Planned for 0.4.0
-- GitHub CLI integration for PR creation
-- Issue/ticket number linking
-- Co-author support
-
-### Planned for 0.5.0
-- Git hooks support
-- Pre-commit validation
-- Commit message templates
-- History search and amend
-
-### Ideas for Future Versions
-- AI-powered commit message suggestions
-- Jira/Linear integration
-- Team conventions enforcement
-- Commit statistics and insights
-
