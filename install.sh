@@ -36,6 +36,10 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo " Installing globally (may require password)..."
     sudo cp gcm /usr/local/bin/gcm
     sudo chmod +x /usr/local/bin/gcm
+    # Sign the binary for macOS (prevents "killed" issue)
+    if [[ "$(uname)" == "Darwin" ]]; then
+        sudo codesign --force --sign - /usr/local/bin/gcm 2>/dev/null || true
+    fi
     echo "✓ Installed to /usr/local/bin/gcm"
     echo ""
     echo "You can now run 'gcm' from any directory!"

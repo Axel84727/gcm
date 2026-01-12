@@ -84,18 +84,33 @@ func (m *CommitMessageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.confirmed = true
 				m.quitting = true
 				return m, tea.Quit
+			} else if m.mode == "title" {
+				m.title += "y"
+				m.err = ""
+			} else if m.mode == "description" {
+				m.description += "y"
 			}
 
 		case "n":
 			if m.mode == "preview" {
 				m.mode = "title"
 				m.err = ""
+			} else if m.mode == "title" {
+				m.title += "n"
+				m.err = ""
+			} else if m.mode == "description" {
+				m.description += "n"
 			}
 
 		case "e":
 			if m.mode == "preview" {
 				m.mode = "title"
 				m.err = ""
+			} else if m.mode == "title" {
+				m.title += "e"
+				m.err = ""
+			} else if m.mode == "description" {
+				m.description += "e"
 			}
 
 		default:
